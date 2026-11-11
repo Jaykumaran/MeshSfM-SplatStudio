@@ -1,0 +1,5 @@
+MeshSfM SplatStudio
+Copyright 2026 the MeshSfM SplatStudio authors
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
+Third-party software and data used at runtime are listed in THIRD_PARTY.md; none of it is bundled.

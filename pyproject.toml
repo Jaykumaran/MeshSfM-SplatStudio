@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meshsfm-splatstudio"
+version = "0.1.0"
+description = "Browser studio for road and street scenes: generate meshes from LiDAR+RGB(+GPS) or RGB(+GPS) captures, edit and clean them, align meshes / Gaussian splats / point clouds, annotate lanes and drive through mesh and splat together."
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.8"
+keywords = ["mesh", "gaussian-splatting", "3dgs", "lidar", "colmap", "sfm", "kitti", "driving", "simulation", "collision-mesh", "icp"]
+dependencies = ["numpy", "scipy", "open3d>=0.17", "opencv-python", "matplotlib"]
+
+[project.optional-dependencies]
+lidar = ["kiss-icp>=1.0", "kiss-slam", "laspy"]
+masks = ["torch", "torchvision"]
+
+[project.scripts]
+meshsfm = "meshsfm.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["meshsfm*"]
+
+[tool.setuptools.package-data]
+meshsfm = ["web/*"]

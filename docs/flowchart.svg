@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900" font-family="DejaVu Sans, Helvetica, Arial, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#8a93a3"/></marker>
+    <style>
+      .t{fill:#e8eaed;font-size:17px;font-weight:700}
+      .s{fill:#a7aebb;font-size:13px}
+      .h{fill:#9aa0aa;font-size:13px;letter-spacing:.12em;font-weight:700}
+      .l{stroke:#8a93a3;stroke-width:2;fill:none;marker-end:url(#a)}
+      .d{stroke:#8a93a3;stroke-width:1.6;fill:none;stroke-dasharray:6 5;marker-end:url(#a)}
+    </style>
+  </defs>
+  <rect width="1600" height="900" fill="#16181d"/>
+  <text x="40" y="52" fill="#e8eaed" font-size="30" font-weight="700">MeshSfM SplatStudio - how it works</text>
+  <text x="40" y="80" class="s" font-size="15">any subset of the inputs -> a capture -> mesh (+ splat) -> prepared, streamed layers -> edit / align / annotate / drive -> exports</text>
+
+  <!-- column headers -->
+  <text x="40" y="128" class="h">INPUTS</text><text x="345" y="128" class="h">POSES</text><text x="660" y="128" class="h">GENERATE</text>
+  <text x="1000" y="128" class="h">PROJECT</text><text x="1300" y="128" class="h">STUDIO</text>
+
+  <!-- inputs -->
+  <g>
+    <rect x="40" y="145" width="250" height="62" rx="10" fill="#1f2a3d" stroke="#2f6feb"/><text x="56" y="172" class="t">Images</text><text x="56" y="194" class="s">rectified RGB  ·  + masks/ (or auto)</text>
+    <rect x="40" y="219" width="250" height="62" rx="10" fill="#1f2a3d" stroke="#2f6feb"/><text x="56" y="246" class="t">LiDAR scans</text><text x="56" y="268" class="s">.bin .npy .ply .pcd  ·  extrinsic</text>
+    <rect x="40" y="293" width="250" height="62" rx="10" fill="#1f2a3d" stroke="#2f6feb"/><text x="56" y="320" class="t">Poses</text><text x="56" y="342" class="s">TUM  ·  KITTI  ·  COLMAP  ·  tables</text>
+    <rect x="40" y="367" width="250" height="62" rx="10" fill="#1f2a3d" stroke="#2f6feb"/><text x="56" y="394" class="t">GPS</text><text x="56" y="416" class="s">image, lat, lon, alt</text>
+    <rect x="40" y="441" width="250" height="62" rx="10" fill="#1f2a3d" stroke="#2f6feb"/><text x="56" y="468" class="t">COLMAP model / points</text><text x="56" y="490" class="s">sparse/0 · fused.ply · LiDAR maps</text>
+    <rect x="40" y="560" width="250" height="88" rx="10" fill="#2a2333" stroke="#a974ff"/><text x="56" y="588" class="t">Existing layers</text><text x="56" y="610" class="s">meshes (file / folder of parts)</text><text x="56" y="630" class="s">splats (SuperSplat .ply)  ·  points</text>
+  </g>
+
+  <!-- poses decision -->
+  <rect x="330" y="185" width="270" height="88" rx="10" fill="#1d2b25" stroke="#3ecf8e"/><text x="346" y="213" class="t">poses given</text><text x="346" y="236" class="s">used as they are, matched by</text><text x="346" y="255" class="s">name · timestamp · order</text>
+  <rect x="330" y="290" width="270" height="88" rx="10" fill="#1d2b25" stroke="#3ecf8e"/><text x="346" y="318" class="t">GPS only</text><text x="346" y="341" class="s">KISS-SLAM (LiDAR) / COLMAP SfM</text><text x="346" y="360" class="s">then aligned to the GPS track</text>
+  <rect x="330" y="395" width="270" height="88" rx="10" fill="#1d2b25" stroke="#3ecf8e"/><text x="346" y="423" class="t">nothing</text><text x="346" y="446" class="s">KISS-SLAM / SfM, own frame</text><text x="346" y="465" class="s">(poses saved as .tum / .kitti)</text>
+  <path class="l" d="M290 176 C310 176 310 229 328 229"/><path class="l" d="M290 250 C310 250 310 334 328 334"/><path class="l" d="M290 324 C310 324 310 229 328 229"/>
+  <path class="l" d="M290 398 C310 398 310 334 328 334"/><path class="l" d="M290 472 C310 472 310 229 328 229"/><path class="d" d="M290 280 C312 300 310 439 328 439"/>
+
+  <!-- generate -->
+  <rect x="640" y="150" width="300" height="76" rx="10" fill="#2b2418" stroke="#ff9f43"/><text x="656" y="178" class="t">lidar pipeline</text><text x="656" y="200" class="s">scans + poses, masked points dropped,</text><text x="656" y="217" class="s">coloured by the closest camera</text>
+  <rect x="640" y="238" width="300" height="76" rx="10" fill="#2b2418" stroke="#ff9f43"/><text x="656" y="266" class="t">rgb pipeline</text><text x="656" y="288" class="s">COLMAP features (masks) -> triangulate</text><text x="656" y="305" class="s">with poses -> dense MVS</text>
+  <rect x="640" y="326" width="300" height="56" rx="10" fill="#2b2418" stroke="#ff9f43"/><text x="656" y="352" class="t">points pipeline</text><text x="656" y="372" class="s">COLMAP model / fused.ply / LiDAR map</text>
+  <rect x="640" y="410" width="300" height="96" rx="10" fill="#33261a" stroke="#ff9f43" stroke-width="2"/><text x="656" y="440" class="t">road-aware meshing</text><text x="656" y="463" class="s">ground -> 10 cm height field</text><text x="656" y="482" class="s">trees / buildings / cars -> Poisson,</text><text x="656" y="499" class="s">trimmed to where there is data</text>
+  <rect x="640" y="530" width="300" height="76" rx="10" fill="#2a2333" stroke="#a974ff"/><text x="656" y="558" class="t">export for a splat trainer</text><text x="656" y="580" class="s">COLMAP model: images + poses + points,</text><text x="656" y="597" class="s">train anywhere, lands in the mesh frame</text>
+  <path class="l" d="M600 229 L638 188"/><path class="l" d="M600 334 L638 276"/><path class="l" d="M600 439 L638 354"/>
+  <path class="l" d="M790 226 L790 236"/><path class="l" d="M940 188 C965 188 965 440 942 440"/><path class="l" d="M940 276 C958 276 958 450 942 450"/><path class="l" d="M790 382 L790 408"/>
+  <path class="d" d="M640 188 C612 300 612 560 638 566"/>
+
+  <!-- project -->
+  <rect x="980" y="150" width="270" height="110" rx="10" fill="#1f2a3d" stroke="#2f6feb"/><text x="996" y="178" class="t">layers</text><text x="996" y="201" class="s">mesh · splat · points, each with</text><text x="996" y="219" class="s">its axis convention (z / y up, y down)</text><text x="996" y="237" class="s">and a 4x4 transform  ·  drive path</text>
+  <rect x="980" y="290" width="282" height="130" rx="10" fill="#1f2a3d" stroke="#2f6feb" stroke-width="2"/><text x="996" y="318" class="t">Prepare</text><text x="996" y="341" class="s">mesh chunks (streamed, editable)</text><text x="996" y="360" class="s">ground grid · orthophoto map</text><text x="996" y="379" class="s">splat tiles (streamed)</text><text x="996" y="398" class="s">edits kept if the mesh is unchanged</text>
+  <path class="l" d="M940 458 C960 458 960 205 978 205"/><path class="l" d="M940 568 C962 568 962 215 978 215"/><path class="l" d="M290 625 C640 770 955 730 962 520 L963 265 C964 252 968 248 978 248"/>
+  <path class="l" d="M1115 260 L1115 288"/>
+
+  <!-- studio -->
+  <rect x="1290" y="150" width="270" height="70" rx="10" fill="#1d2b25" stroke="#3ecf8e"/><text x="1306" y="178" class="t">2  Edit</text><text x="1306" y="200" class="s">brush · lasso · smooth · fill · crop</text>
+  <rect x="1290" y="232" width="270" height="70" rx="10" fill="#1d2b25" stroke="#3ecf8e"/><text x="1306" y="260" class="t">3  Align</text><text x="1306" y="282" class="s">pairs (mis-clicks dropped) + robust ICP</text>
+  <rect x="1290" y="314" width="270" height="70" rx="10" fill="#1d2b25" stroke="#3ecf8e"/><text x="1306" y="342" class="t">4  Annotate</text><text x="1306" y="364" class="s">lanes · road class · drive path</text>
+  <rect x="1290" y="396" width="270" height="70" rx="10" fill="#1d2b25" stroke="#3ecf8e"/><text x="1306" y="424" class="t">5  Drive</text><text x="1306" y="446" class="s">mesh and / or splat · orbit · fly</text>
+  <path class="l" d="M1250 340 C1270 340 1270 185 1288 185"/><path class="l" d="M1250 350 C1272 350 1272 267 1288 267"/><path class="l" d="M1250 356 L1288 349"/><path class="l" d="M1250 366 C1270 366 1270 431 1288 431"/>
+  <path class="d" d="M1425 302 C1425 300 1200 290 1200 262"/>
+
+  <rect x="1290" y="520" width="270" height="110" rx="10" fill="#2b2418" stroke="#ff9f43"/><text x="1306" y="548" class="t">Exports</text><text x="1306" y="571" class="s">mesh parts + merged (.ply / .obj)</text><text x="1306" y="590" class="s">road-segmented mesh · lane lines</text><text x="1306" y="609" class="s">poses (.tum / .kitti)</text>
+  <path class="l" d="M1425 466 L1425 518"/>
+
+  <text x="40" y="860" class="s">every edit is non-destructive and undoable  ·  heavy jobs run in their own process  ·  internal frame: z up, metres  ·  exports also in the source frame</text>
+</svg>

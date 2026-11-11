@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>MeshSfM SplatStudio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/web/studio.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Cpath d=%22M2 14 8 2l6 12z%22 fill=%22%232f6feb%22/%3E%3C/svg%3E">
+</head>
+<body>
+<div id="app">
+  <div id="sideGrip" title="Drag to resize the side panel"></div>
+  <div id="toolbar">
+    <span id="title">MeshSfM <b>SplatStudio</b></span>
+    <div class="sections">
+      <button class="secbtn" data-sec="gen" title="Project, layers, mesh generation">1 Generate</button>
+      <button class="secbtn" data-sec="edit" title="Clean, crop, smooth, fill, export the mesh">2 Edit</button>
+      <button class="secbtn" data-sec="align" title="Align a splat / mesh / point layer to another">3 Align</button>
+      <button class="secbtn" data-sec="annotate" title="Lane lines, road segmentation">4 Annotate</button>
+      <button class="secbtn" data-sec="drive" title="Drive along the path with mesh and / or splat">5 Drive</button>
+    </div>
+    <div class="tabs"><button class="tab on" data-tab="map" title="Top-down map: lanes, contours (Tab)">Map</button><button class="tab" data-tab="3d" title="3D mesh view (Tab)">3D</button></div>
+    <div class="sep"></div>
+    <div id="mapTools" class="group">
+      <button class="tool" data-tool="edit" title="Select / edit (V)">Edit<span class="k">V</span></button>
+      <button class="tool" data-tool="pen" title="Keynode pen: click to place nodes (P)">Pen<span class="k">P</span></button>
+      <button class="tool" data-tool="free" title="Free draw: drag; converted to keynodes (F)">Free draw<span class="k">F</span></button>
+      <button class="tool" data-tool="insert" title="Insert keynode on a line (I)">Insert<span class="k">I</span></button>
+      <button class="tool" data-tool="erase" title="Erase keynodes by clicking them (D)">Erase node<span class="k">D</span></button>
+      <button class="tool" data-tool="split" title="Split a line at a node or point (X)">Split<span class="k">X</span></button>
+      <button class="tool" data-tool="join" title="Join two lines at their ends (J)">Join<span class="k">J</span></button>
+      <button class="tool" data-tool="measure" title="Measure distance (M)">Measure<span class="k">M</span></button>
+      <button class="tool" data-tool="fill" title="Fill contour: draw a contour around a hole, Enter to generate the patch (G)">Fill area<span class="k">G</span></button>
+      <div class="sep"></div>
+      <button id="bAlign" title="Keep the road pointing up while you pan and jump (A); North up or Q/E rotation turns it off">Follow road <kbd>A</kbd></button>
+      <button id="bNorth" title="Reset rotation (Shift+A)">North up</button>
+      <button id="bReview" title="Mark the 25 m route segment at the view centre as reviewed (K)">Reviewed <kbd>K</kbd></button>
+      <button id="b3dHere" title="Open the 3D view at the map centre (T)">3D here <kbd>T</kbd></button>
+    </div>
+    <div id="tools3d" class="group" style="display:none">
+      <button class="tool3" data-tool="nav" title="Navigate: drag to look around (V / Esc)">Navigate<span class="k">V</span></button>
+      <button class="tool3" data-tool="brush" title="Erase brush: drag over floaters; Alt+drag restores (B)">Brush<span class="k">B</span></button>
+      <button class="tool3" data-tool="smooth" title="Smooth brush: drag over spikes / bumps; evens the surface and blends it into the neighbours (M)">Smooth<span class="k">M</span></button>
+      <button class="tool3" data-tool="poly" title="Polyline select: click corners, double-click / Enter closes (Y)">Polyline<span class="k">Y</span></button>
+      <button class="tool3" data-tool="rect" title="Box select: drag a rectangle; visible triangles inside turn red (R)">Box<span class="k">R</span></button>
+      <button class="tool3" data-tool="lasso" title="Lasso: select visible triangles inside a drawn outline (L)">Lasso<span class="k">L</span></button>
+      <button class="tool3" data-tool="blob" title="Pick blob: click a floater, selects the connected piece above the ground (O)">Pick blob<span class="k">O</span></button>
+      <button class="tool3" data-tool="fill" title="Fill contour: click points on the surface around a hole, Enter to generate (G)">Fill area<span class="k">G</span></button>
+      <button class="tool3" data-tool="lanes" title="Edit lane lines in 3D (P)">Edit lanes<span class="k">P</span></button>
+      <button class="tool3" data-tool="inspect" title="Inspect: click for position, GPS, height above ground (I)">Inspect<span class="k">I</span></button>
+      <div class="sep"></div>
+      <button id="bDrive" title="Drive along the route (T)">Drive mode <kbd>T</kbd></button>
+      <button id="tgMesh" class="tglbtn on" title="Show / hide the mesh (U)">Mesh<span class="k">U</span></button><button id="tgSplat" class="tglbtn on" title="Show / hide the Gaussian splats (J)">Splat<span class="k">J</span></button>
+      <button id="bShade" title="Colours / lit grey geometry (N)">Shading <kbd>N</kbd></button>
+      <button id="bOnMap" title="Show this place on the map (Tab)">On map</button>
+    </div>
+    <div id="tbRight">
+      <span id="savestate">loading...</span>
+    <button id="bUndo" title="Undo (Ctrl+Z)">&#8630;</button>
+    <button id="bRedo" title="Redo (Ctrl+Y)">&#8631;</button>
+    <button id="bSave" class="primary" title="Save lanes + export (Ctrl+S)">Save <kbd>Ctrl+S</kbd></button>
+    <button id="bHelp" title="All keys (H)">Help <kbd>H</kbd></button>
+    <button id="bTheme" title="Light / dark mode"><svg id="icSun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg><svg id="icMoon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" style="display:none"><path d="M20.5 14.5A8.5 8.5 0 0 1 9.5 3.5a8.5 8.5 0 1 0 11 11z"/></svg></button>
+    
+      <div class="sizes" title="Interface size"><button class="szbtn" data-size="small">S</button><button class="szbtn" data-size="medium">M</button><button class="szbtn" data-size="large">L</button></div>
+    </div>
+  </div>
+
+  <div id="side">
+    <div class="sec" data-s="gen edit align annotate drive">
+      <h3>Project <span class="muted" id="projName"></span></h3>
+      <div class="row muted" id="projRoot" style="word-break:break-all"></div>
+      <div class="row muted" id="projPath"></div>
+      <div class="row muted" id="projPrepared"></div>
+      <h3 style="margin-top:8px">Layers</h3>
+      <div id="layerList"></div>
+    </div>
+    <div class="sec" data-s="gen">
+      <h3>Add a layer</h3>
+      <div class="row"><select id="addKind"><option value="mesh">Mesh (file or folder of parts)</option><option value="splat">Gaussian splat (.ply, e.g. SuperSplat-cleaned)</option><option value="points">Point cloud (.ply / .las / .pcd)</option></select></div>
+      <div class="row"><input type="text" id="addPath" placeholder="path on this machine" style="flex:1"><button id="bBrowseAdd">Browse</button></div>
+      <div class="row"><label>Axes</label><select id="addFrame"><option value="z_up">z up (LiDAR, GIS, most meshes)</option><option value="y_down">y down (COLMAP / 3DGS / SuperSplat)</option><option value="y_up">y up (glTF, OpenGL)</option></select></div>
+      <div class="row"><label>Name</label><input type="text" id="addName" placeholder="optional" style="flex:1"><button id="bAddLayer" class="primary">Add</button></div>
+    </div>
+    <div class="sec" data-s="gen">
+      <h3>Generate a mesh</h3>
+      <div class="row"><select id="genPipe" style="flex:1"><option value="lidar">LiDAR + RGB (+ GPS) capture</option><option value="rgb">RGB (+ GPS) capture - COLMAP</option><option value="points">Point cloud / COLMAP model</option></select></div>
+      <div class="muted" id="genHelp" style="margin:4px 0;line-height:1.4"></div>
+      <div class="row"><label>From</label><select id="genFrom" style="flex:1"><option value="capture">a capture folder (cameras.json, images/, lidar/, masks/)</option><option value="inputs">separate inputs (images, LiDAR, poses, GPS ...)</option></select></div>
+      <div id="genCapture"><div class="row"><input type="text" id="genPath" placeholder="capture folder / point cloud" style="flex:1"><button id="bBrowseGen">Browse</button></div></div>
+      <div id="genInputs" style="display:none">
+        <div class="row"><label>Images *</label><input type="text" id="in_images" placeholder="folder of images" style="flex:1"><button class="bIn" data-for="in_images">...</button></div>
+        <div class="row"><label>Masks</label><input type="text" id="in_masks" placeholder="folder, same names, white = ignore" style="flex:1"><button class="bIn" data-for="in_masks">...</button></div>
+        <div class="row"><label>LiDAR scans</label><input type="text" id="in_lidar" placeholder="folder (.bin / .npy / .ply / .pcd)" style="flex:1"><button class="bIn" data-for="in_lidar">...</button></div>
+        <div class="row"><label>COLMAP model</label><input type="text" id="in_colmap" placeholder="sparse/0 (.bin / .txt): intrinsics + poses + points" style="flex:1"><button class="bIn" data-for="in_colmap">...</button></div>
+        <div class="row"><label>Dense points</label><input type="text" id="in_points" placeholder="e.g. fused.ply (points pipeline)" style="flex:1"><button class="bIn" data-for="in_points">...</button></div>
+        <div class="row"><label>Camera poses</label><input type="text" id="in_poses" placeholder=".tum / .kitti / table / cameras.json" style="flex:1"><button class="bIn" data-for="in_poses">...</button></div>
+        <div class="row"><label>Image times</label><input type="text" id="in_timestamps" placeholder="one per line (TUM matching); empty = names / order" style="flex:1"><button class="bIn" data-for="in_timestamps">...</button></div>
+        <div class="row"><label>LiDAR poses</label><input type="text" id="in_lidar_poses" placeholder=".tum / .kitti / table; empty = KISS-SLAM" style="flex:1"><button class="bIn" data-for="in_lidar_poses">...</button></div>
+        <div class="row"><label>LiDAR times</label><input type="text" id="in_lidar_timestamps" placeholder="one per line (optional)" style="flex:1"><button class="bIn" data-for="in_lidar_timestamps">...</button></div>
+        <div class="row"><label>GPS</label><input type="text" id="in_gps" placeholder="CSV: image, lat, lon, alt" style="flex:1"><button class="bIn" data-for="in_gps">...</button></div>
+        <div class="row"><label>Intrinsics</label><input type="text" id="in_intrinsics" placeholder="fx, fy, cx, cy (empty = estimate)" style="flex:1"></div>
+        <div class="row"><label>LiDAR&rarr;camera</label><input type="text" id="in_T_cam_lidar" placeholder="file with the 4x4 extrinsic" style="flex:1"><button class="bIn" data-for="in_T_cam_lidar">...</button></div>
+        <div class="muted" style="line-height:1.4">Poses: TUM (t tx ty tz qx qy qz qw), KITTI (3x4 rows), COLMAP model, name + quaternion / 4x4 tables; matched by name, timestamp or order. Poses win over GPS. GPS only: KISS-SLAM (LiDAR) or COLMAP SfM, then aligned to the GPS track. Without poses or GPS the result is in its own frame (use Align).</div>
+      </div>
+      <div class="row"><input type="checkbox" id="genMasks" checked><span>Use masks (masks/ folder: cars, people, sky ...)</span></div>
+      <div class="row"><input type="checkbox" id="genObjects" checked><span>Mesh trees / buildings too (not only the ground)</span></div>
+      <div class="row"><input type="checkbox" id="genFast"><span>RGB: fast dense MVS (photometric only, depth for every 2nd image)</span></div>
+      <div class="row"><label>Name</label><input type="text" id="genName" placeholder="e.g. lidar_v1" style="flex:1"><button id="bGen" class="primary">Generate</button></div>
+      <div class="row muted">The result is added as a mesh layer (+ its point cloud) and the drive path is taken from the poses.</div>
+    </div>
+    <div class="sec" data-s="gen">
+      <h3>Splat from the same capture</h3>
+      <div class="row muted">Exports a generated mesh's capture as a COLMAP model: its images + poses, with its LiDAR / MVS points as the initial point cloud. Train it with any 3DGS trainer; the splat lands in the mesh frame (no alignment).</div>
+      <div class="row"><label>From</label><select id="trSrc" style="flex:1"></select></div>
+      <div class="row"><button id="bExpColmap" style="flex:1" title="images + poses + initial points as a COLMAP model">Export for a splat trainer (COLMAP)</button></div>
+      <div class="row muted" id="expColmapInfo">Keep the trainer from re-centring / re-scaling the scene, then add the trained .ply as a splat layer (z up). See the README for an example.</div>
+    </div>
+    <div class="sec" data-s="gen">
+      <h3>Prepare</h3>
+      <div class="row muted">Builds what the studio streams: mesh chunks, ground grid, orthophoto (from the splat, else points, else mesh colours), splat tiles. Run after adding layers or changing axes.</div>
+      <div class="row"><label>Chunk</label><input type="number" id="set_chunk" step="5" style="width:60px"> m <label style="min-width:0">Ground cell</label><input type="number" id="set_ground_cell" step="0.1" style="width:55px"> m</div>
+      <div class="row"><label>Road half-width</label><input type="number" id="set_corridor_half" step="0.5" style="width:60px"> m <button id="bSettings">Save</button></div>
+      <div class="row"><input type="checkbox" id="resetPath"><span>Rebuild the drive path from the data axis</span></div>
+      <div class="row"><button id="bPrepare" class="primary" style="flex:1">Prepare</button></div>
+    </div>
+    <div class="sec" data-s="annotate drive gen">
+      <h3>Drive path</h3>
+      <div class="row muted" id="dpInfo">Draw the path you want to drive along - on the top-view map or on the 3D surface (any view, even eye level) - then use it.</div>
+      <div class="row"><button id="dpMap" style="flex:1">Draw on map</button><button id="dpView" style="flex:1">Draw in 3D</button></div>
+      <div class="row"><button id="dpUse" class="primary" style="flex:1">Use the drawn path</button></div>
+      <div class="row muted">Map: click points, Enter finishes. 3D: Shift+click points on the surface, Esc finishes. The mesh is re-chunked along the new path (do it before editing: earlier edits go to a backup folder).</div>
+    </div>
+    <div class="sec" data-s="align">
+      <h3>Align layers</h3>
+      <div class="row"><label>Move</label><select id="alMoving" style="flex:1"></select></div>
+      <div class="row"><label>Onto</label><select id="alFixed" style="flex:1"></select></div>
+      <div class="row"><input type="checkbox" id="alSplit" checked><span><b>Side by side</b>: the moving layer on the left, the fixed one on the right, same camera (a splat and a mesh)</span></div>
+      <div class="row"><input type="checkbox" id="alPickOn" checked><span>Pick point pairs (Inspect tool): click a spot on the moving layer, then the same spot on the fixed one - side by side: left, then right. Rough clicks are fine - they are a starting guess and soft anchors, and mis-clicks are dropped.</span></div>
+      <div class="row muted" id="alSplitNote"></div>
+      <div id="alPicks" class="alpicks"></div>
+      <div class="row"><button id="alUndo">Undo last click</button><button id="alClear">Clear pairs</button></div>
+      <div class="row"><label>Motion</label><select id="alMode" style="flex:1">
+        <option value="rigid">rigid - rotate + shift (6 DOF)</option>
+        <option value="yaw">keep up direction - turn about z + shift (4 DOF)</option>
+        <option value="similarity">rigid + scale (7 DOF)</option>
+        <option value="translation">shift only (3 DOF)</option></select></div>
+      <div class="row"><label>Pairs within</label><input type="number" id="alSigma" value="0.2" step="0.05" min="0.02" style="width:60px"><span>m (how carefully you clicked)</span></div>
+      <div class="row"><input type="checkbox" id="alIcp" checked><span>refine on the surfaces, search within</span><input type="number" id="alDist" value="1.0" step="0.25" style="width:55px"> m</div>
+      <div class="row"><input type="checkbox" id="alColour" checked><span>use colour too (pins flat roads by their markings)</span></div>
+      <div class="row"><button id="alRun" class="primary" style="flex:1">Solve</button><button id="alApply" disabled>Apply to layer</button></div>
+      <div id="alResult" class="muted" style="line-height:1.55"></div>
+      <div class="row muted">Tip: hide the mesh (U) or the splat (J) to compare. Apply changes only the layer's transform (undo: re-align or reset its axes).</div>
+    </div>
+    <div class="sec" data-s="edit align drive">
+      <h3>Splat</h3>
+      <div class="row"><input type="checkbox" id="splatOn" checked><span>Show splat layers (J)</span></div>
+      <div class="row"><label>Budget</label><input type="range" id="splatBudget" min="0.5" max="8" step="0.5" value="3"><span id="splatBudgetV">3 M</span></div>
+      <div class="row"><label>Radius</label><input type="range" id="splatRadius" min="30" max="600" step="10" value="150"><span id="splatRadiusV">150 m</span></div>
+      <div class="row muted" id="splatInfo"></div>
+    </div>
+    <!-- ======================= map panels ======================= -->
+    <div class="sec map-only" data-s="annotate">
+      <h3>New lines</h3>
+      <div class="row"><label>Type</label><select id="newType"></select></div>
+      <div class="row muted">Keys 1-6 set the type (of the selected line, or of new lines when nothing is selected).</div>
+      <div class="row"><label>Free-draw</label><input type="range" id="freeTol" min="0.01" max="0.3" step="0.01" value="0.05"><span id="freeTolV">0.05 m</span></div>
+      <div class="row"><label>Snap ends</label><input type="checkbox" id="snapEnds" checked><span class="muted">connect to nearby line ends</span></div>
+    </div>
+    <div class="sec" data-s="annotate">
+      <h3>Lines <span><button id="bImport" style="display:none"></button></span></h3>
+      <div id="lines"></div>
+    </div>
+    <div class="sec" id="propsec" data-s="annotate">
+      <h3>Selected line</h3>
+      <div id="noSel" class="muted">Click a line (Edit tool) to select it.</div>
+      <div id="props" style="display:none">
+        <div class="row"><label>Name</label><input type="text" id="pName" style="flex:1"></div>
+        <div class="row"><label>Type</label><select id="pType" style="flex:1"></select></div>
+        <div class="row"><label>Curve</label><select id="pSmooth"><option value="1">Smooth spline</option><option value="0">Straight segments</option></select></div>
+        <div class="row muted" id="pInfo"></div>
+        <div class="row"><button id="pFocus">Zoom to</button><button id="pReverse" title="Shift+R">Reverse</button><button id="pContinue">Continue <kbd>C</kbd></button></div>
+        <div class="row"><button id="pSimplify">Simplify</button><input type="number" id="pSimpTol" value="0.03" step="0.01" min="0.005"> m</div>
+        <div class="row"><button id="pDensify" title="Adds keynodes on the current curve; existing keynodes stay">Densify</button> every <input type="number" id="pDensStep" value="1" step="0.25" min="0.05"> m</div>
+        <div class="row"><select id="pDensMode" style="flex:1"><option value="auto">auto: selected span / around 1 selected node</option><option value="span">between the selected keynodes</option><option value="around">around the selected keynode</option><option value="all">whole line</option></select></div>
+        <div class="row"><label>Around &plusmn;</label><input type="number" id="pDensAround" value="10" step="1" min="0.5"> m <span class="muted">(1 node selected)</span></div>
+        <div class="row"><button id="pOffset" title="+ = to the right of the line direction">Parallel copy</button><input type="number" id="pOffDist" value="1.8" step="0.1"> m <select id="pOffType"></select></div>
+        <div class="row"><button id="pDelNodes">Delete nodes <kbd>Del</kbd></button><button id="pDelete" class="danger">Delete line</button></div>
+        <div class="row"><button id="pAsPath" title="Re-chunk the project along this line (e.g. a centre line you drew); the drive mode follows it">Use as drive path</button></div>
+      </div>
+    </div>
+    <div class="sec map-only" data-s="annotate gen">
+      <h3>Map view</h3>
+      <div class="row"><label>Brightness</label><input type="range" id="vBright" min="0.4" max="2.5" step="0.05" value="1"></div>
+      <div class="row"><label>Contrast</label><input type="range" id="vContrast" min="0.4" max="3" step="0.05" value="1.15"></div>
+      <div class="row"><label>Saturation</label><input type="range" id="vSat" min="0" max="3" step="0.05" value="1.2"></div>
+      <div class="row"><label>Imagery</label><input type="range" id="vOpacity" min="0" max="1" step="0.05" value="1"></div>
+      <div class="row"><label>Line width</label><input type="range" id="vWidth" min="1" max="6" step="0.5" value="2"></div>
+      <div class="row"><input type="checkbox" id="vRoute" checked><span>Route + metre marks</span></div>
+      <div class="row"><input type="checkbox" id="vNodes" checked><span>Keynodes on all lines</span> <kbd>N</kbd></div>
+      <div class="row"><input type="checkbox" id="vArrows" checked><span>Direction arrows</span></div>
+      <div class="row"><input type="checkbox" id="vLabels"><span>Line labels</span></div>
+      <div class="row"><button id="vReset">Reset view settings</button></div>
+    </div>
+    <div class="sec map-only" data-s="annotate">
+      <h3>Lane file</h3>
+      <div class="row"><input type="checkbox" id="autosave" checked><span>Autosave every 60 s</span></div>
+      <div class="row"><button id="bDownload">Download JSON</button><button id="bUpload">Load JSON...</button><input type="file" id="fileIn" accept=".json" style="display:none"></div>
+      <div class="row muted" id="exportInfo"></div>
+    </div>
+
+    <!-- ======================= 3D / mesh panels ======================= -->
+    <div class="sec v3-only" data-s="edit align drive">
+      <h3>3D view</h3>
+      <div class="row"><label>Field of view</label><input type="range" id="fov" min="30" max="110" step="1" value="70"><span id="fovV">70&deg;</span></div>
+      <div class="row"><label>Move speed</label><input type="range" id="speed" min="0.5" max="60" step="0.5" value="6"><span id="speedV">6 m/s</span></div>
+      <div class="row"><label>Detail radius</label><input type="range" id="rFull" min="40" max="400" step="10" value="150"><span id="rFullV">150 m</span></div>
+      <div class="row"><label>Budget</label><input type="range" id="budget" min="2" max="40" step="1" value="12"><span id="budgetV">12 M tris</span></div>
+      <div class="row"><input type="checkbox" id="showLanes" checked><span>Lane lines + route</span></div>
+      <div class="row"><input type="checkbox" id="showPatches" checked><span>Generated patches</span></div>
+      <div class="row"><input type="checkbox" id="tintPatches"><span>Tint applied patches blue</span></div>
+      <div class="row"><input type="checkbox" id="fog" checked><span>Distance fog</span></div>
+      <div class="row muted" id="loadInfo"></div>
+    </div>
+    <div class="sec v3-only" data-s="drive">
+      <h3>Drive mode</h3>
+      <div class="row"><label>Eye height</label><input type="range" id="eyeH" min="0.3" max="12" step="0.1" value="1.5"><span id="eyeHV">1.5 m</span></div>
+      <div class="row muted">T: drive / fly. Drive: W/S speed, A/D or arrows look, Z/X lower/raise, Space brake.</div>
+    </div>
+    <div class="sec v3-only" data-s="edit">
+      <h3>Manual tools</h3>
+      <div class="row"><label>Brush radius</label><input type="range" id="brushR" min="0.1" max="5" step="0.05" value="0.6"><span id="brushRV">0.6 m</span></div>
+      <div class="row"><label>Selection does</label><select id="selAct" style="flex:1"><option value="remove">Remove (red preview, Enter applies)</option><option value="flatten">Flatten / level the surface</option><option value="smooth">Smooth the surface</option><option value="recolour">Recolour from the orthophoto</option></select></div>
+      <div class="row muted">Box (R), Polyline (Y) and Lasso (L) select everything you enclose - road included.</div>
+      <div class="row"><input type="checkbox" id="protect"><span>Brush / blob: protect ground below</span><input type="number" id="protectH" value="0.25" step="0.05" min="0" style="width:60px"> m</div>
+      <div class="row"><input type="checkbox" id="lassoThrough"><span>Lasso selects hidden triangles too</span></div>
+      <div class="row muted">Brush deletes at once (Alt = restore). Lasso and Pick blob make a red selection: Enter applies, Esc drops.</div>
+    </div>
+    <div class="sec v3-only" data-s="edit">
+      <h3>Smooth brush (M)</h3>
+      <div class="row"><label>Strength</label><input type="range" id="smS" min="0.05" max="1" step="0.05" value="0.5"><span id="smSV">0.50</span></div>
+      <div class="row"><label>Height range</label><input type="number" id="smH" value="0.8" step="0.1" min="0.1"> m <span class="muted">bumps / spikes up to this are evened</span></div>
+      <div class="row"><label>Colours</label><select id="smC"><option value="ortho">Re-project from the orthophoto (keeps road paint)</option><option value="spikes">Keep texture, spikes take the orthophoto colour</option><option value="smooth">Blend colours too</option><option value="keep">Keep colours</option></select></div>
+      <div class="row"><input type="checkbox" id="smHole" checked><span>Close holes under the stroke</span></div>
+      <div class="row muted">Uses the brush radius above. Drag repeatedly for more effect; each stroke is one undo step.</div>
+    </div>
+    <div class="sec v3-only map-also" id="fillsec" data-s="edit">
+      <h3>Contour: fill / crop (G)</h3>
+      <div class="row"><label>Action</label><select id="fillAction"><option value="fill">Fill / reshape the area</option><option value="outside">Crop: keep inside, remove outside</option><option value="inside">Crop: remove inside</option></select></div>
+      <div class="row"><input type="checkbox" id="cropBand"><span>Crop only heights</span><input type="number" id="cropH0" value="0.3" step="0.1" style="width:55px"> to <input type="number" id="cropH1" value="50" step="1" style="width:55px"> m above ground</div>
+      <div class="row"><label>Surface</label><select id="fillMode"><option value="level">Levelled (best-fit plane, blended at edges)</option><option value="smooth">Smooth membrane (follows neighbours)</option></select></div>
+      <div class="row"><label>Colour</label><select id="fillColour"><option value="ortho">Re-project from the orthophoto (keeps road paint)</option><option value="keep">Keep texture (spikes take the splat colour)</option><option value="blend">Blend of neighbour colours</option></select></div>
+      <div class="row"><label>Replace</label><select id="fillRemove"><option value="ground">Reshape the surface inside</option><option value="all">Reshape + remove taller things (below clearance)</option><option value="none">Only close holes</option></select></div>
+      <div class="row"><label>Clearance</label><input type="number" id="fillClear" value="4.5" step="0.5"> m <label style="min-width:0">Blend</label><input type="number" id="fillBlend" value="0.6" step="0.1"> m</div>
+      <div class="row"><label>Reshape within</label><input type="number" id="fillFlat" value="0.6" step="0.1" min="0.1"> m <span class="muted">of the new surface (bumps / spikes)</span></div>
+      <div class="row"><label>Cell</label><input type="number" id="fillCell" value="0" step="0.05" min="0"> m <span class="muted">0 = auto</span></div>
+      <div class="row muted">Draw the contour with Fill area (G) on the map or on the 3D surface, then Enter. The mesh inside is reshaped in place (feathered to the contour, no seam); real holes get a surface just under the mesh that overlaps it.</div>
+    </div>
+    <div class="sec v3-only" data-s="edit">
+      <h3>Automatic cleaning</h3>
+      <div class="row"><label>Path from</label><input type="number" id="arc0" value="0" step="10"> to <input type="number" id="arc1" value="100000" step="10"> m</div>
+      <div class="row"><button id="rWhole">Whole route</button><button id="rHere">Here &plusmn;</button><input type="number" id="rHereD" value="100" step="25" style="width:60px"> m</div>
+      <details open><summary>Ghost obstacles on the road</summary>
+        <div class="row"><label>Height</label><input type="number" id="gH0" value="0.3" step="0.05"> to <input type="number" id="gH1" value="4.5" step="0.5"> m</div>
+        <div class="row"><label>Edge margin</label><input type="number" id="gM" value="0.5" step="0.1"> m <button class="auto" data-tool="ghost">Preview</button></div>
+      </details>
+      <details><summary>Floaters (hanging in the air)</summary>
+        <div class="row"><label>Gap below</label><input type="number" id="fG" value="0.5" step="0.1"> m <label style="min-width:0">top below</label><input type="number" id="fT" value="6" step="0.5"> m</div>
+        <div class="row"><label>Max lateral</label><input type="number" id="fL" value="15" step="1"> m <button class="auto" data-tool="floaters">Preview</button></div>
+        <div class="row muted">Pieces that never come within the gap of the ground (trees / bushes standing on it stay).</div>
+      </details>
+      <details><summary>Disconnected pieces</summary>
+        <div class="row"><label>Smaller than</label><input type="number" id="iN" value="2000" step="500"> tris <button class="auto" data-tool="islands">Preview</button></div>
+      </details>
+      <details><summary>Level the road surface</summary>
+        <div class="row"><label>Edge margin</label><input type="number" id="rdM" value="0.3" step="0.1"> m <label style="min-width:0">Blend</label><input type="number" id="rdB" value="0.5" step="0.1"> m</div>
+        <div class="row"><label>Cell</label><input type="number" id="rdC" value="0.15" step="0.05"> m <button class="auto" data-tool="road">Preview</button></div>
+        <div class="row muted">Replaces the noisy road surface between the lane edges with a smooth one (crossfall kept), blended into the shoulders.</div>
+      </details>
+      <details><summary>Off-road safety ground</summary>
+        <div class="row"><label>Out to</label><input type="number" id="skW" value="30" step="5"> m <label style="min-width:0">below</label><input type="number" id="skB" value="0.05" step="0.01"> m</div>
+        <div class="row"><input type="checkbox" id="skMiss" checked><span>Only where the mesh has no ground</span> <button class="auto" data-tool="skirt">Preview</button></div>
+      </details>
+    </div>
+    <div class="sec v3-only map-also" data-s="edit">
+      <h3>Pending change</h3>
+      <div id="propInfo" class="muted">None. Previews and selections show here (red = will be removed, green = new surface).</div>
+      <div class="row"><button id="pAccept" class="primary" disabled>Apply <kbd>Enter</kbd></button><button id="pDiscard" disabled>Drop <kbd>Esc</kbd></button></div>
+      <div id="jobInfo" class="muted"></div>
+    </div>
+    <div class="sec v3-only map-also" data-s="annotate">
+      <h3>Segment road with lane line</h3>
+      <div class="row"><label>Edge margin</label><input type="number" id="segMargin" value="0.0" step="0.1" style="width:55px"> m <label style="min-width:0">Max H</label><input type="number" id="segMaxH" value="0.6" step="0.1" style="width:55px"> m</div>
+      <div class="row"><label>Road colour</label><input type="color" id="segColor" value="#8cd2ff" style="width:36px;height:22px;padding:0;border:none;background:none"> <label style="min-width:0">Alpha</label><input type="number" id="segAlpha" value="0.5" min="0.1" max="1.0" step="0.05" style="width:55px"> <input type="checkbox" id="segBlend"><span class="muted">blend texture</span></div>
+      <div class="row"><input type="checkbox" id="segSaveRaw" checked><span>Save raw edited cloud/mesh (with changes applied)</span></div>
+      <div class="row"><input type="checkbox" id="segSaveLabelled" checked><span>Save Road-labelled PLY (class Road=1, light colour, half alpha + road-only)</span></div>
+      <div class="row"><input type="checkbox" id="segSaveParts"><span>Also save per-part PLYs</span></div>
+      <div class="row"><button id="bSegPreview" title="Highlight segmented Road region in 3D with light colour and half transparency">Preview in 3D</button><button id="bSegExport" class="primary" style="flex:1">Segment road with lane line</button></div>
+      <div class="row muted" id="segResult">Segments region inside left/right lane edges as class Road (label=1, class_id=1) for Gaussian Splat &amp; camera projection.</div>
+    </div>
+    <div class="sec v3-only" data-s="edit">
+      <h3>Mesh edits</h3>
+      <div id="meshSummary" class="muted"></div>
+      <div id="undoList" class="muted"></div>
+      <div class="row"><button id="bExport" class="primary">Export mesh</button><input type="checkbox" id="exportObj"><span class="muted">also .obj</span></div>
+      <div class="row muted">Writes exports/parts/ (same part names) and exports/&lt;project&gt;_zup.ply (+ _source_frame.ply when the mesh came in another axis convention).</div>
+      <div class="row"><button id="bRecolour" title="Colour every ground-level vertex from the orthophoto (heights kept, one undo step)">Re-project ground colours</button></div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div id="mapWrap" class="view">
+      <canvas id="c"></canvas>
+      <div id="hint"></div>
+      <div id="banner">No lane annotation yet: draw road edges with the Pen (P).<button id="bnImport" style="display:none"></button> <button id="bnClose">&times;</button></div>
+      <canvas id="mini" width="230" height="230" title="Click to jump"></canvas>
+    </div>
+    <div id="v3Wrap" class="view" style="display:none">
+      <canvas id="c3"></canvas>
+      <canvas id="hud"></canvas>
+      <div id="hint3"></div>
+      <div id="info3"></div>
+    </div>
+  </div>
+
+  <div id="bottom">
+    <div id="scrubwrap"><canvas id="scrubbg"></canvas><input type="range" id="scrub" min="0" max="2400" step="1" value="0"></div>
+    <div id="status">
+      <span>route <b id="sArc">-</b></span><span>cursor <b id="sCur">-</b></span><span>GPS <b id="sGps">-</b></span><span id="sScaleWrap">scale <b id="sScale">-</b></span>
+      <span>go to <input type="number" id="goto" style="width:70px" placeholder="metre"> <input type="text" id="gotoGps" style="width:150px" placeholder="lat, lon"></span>
+      <span id="sCover"></span>
+    </div>
+  </div>
+</div>
+
+<div id="help"><div class="box" id="helpBox"></div></div>
+<div id="toast"></div>
+<div id="fsWrap"><div class="box"><div class="row"><input type="text" id="fsPath" style="flex:1"><button id="fsUse" class="primary">Use this path</button><button id="fsClose">&times;</button></div><div id="fsList"></div></div></div>
+<div id="jobBar"><span id="jobMsg"></span></div>
+
+<script src="/web/common.js"></script>
+<script src="/web/map.js"></script>
+<script src="/web/view3d.js"></script>
+<script src="/web/meshtools.js"></script>
+<script src="/web/lanes3d.js"></script>
+<script src="/web/splat.js"></script>
+<script src="/web/studio.js"></script>
+</body>
+</html>
